@@ -10,7 +10,7 @@ int bluePin = 5;
 #include "Color.cpp"
 #include "ColorStepper.cpp"
 
-ColorStepper cs(80000);
+ColorStepper cs(80000, 200);
 
 void setup() {
   pinMode(redPin, OUTPUT);

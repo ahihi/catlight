@@ -13,12 +13,34 @@ class Color {
       this->b = b;
     }
 
+    Color add(Color other) {
+      return Color(
+        this->r + other.r,
+        this->g + other.g,
+        this->b + other.b
+      );
+    }
+
+    Color multiply(uint16_t m) {
+      uint32_t m32 = static_cast<uint32_t>(m);
+      return Color(
+        m32 * this->r / 255,
+        m32 * this->g / 255,
+        m32 * this->b / 255
+      );
+    }
+
     Color blend(Color other, uint16_t amount) {
       return Color(
-        ((255 - amount) * this->r + amount * other.r) / 255,
-        ((255 - amount) * this->g + amount * other.g) / 255,
-        ((255 - amount) * this->b + amount * other.b) / 255
+        blend(this->r, other.r, amount),
+        blend(this->g, other.g, amount),
+        blend(this->b, other.b, amount)
       );
+    }
+
+  private:
+    static uint16_t blend(uint16_t a, uint16_t b, uint16_t amount) {
+      return ((255 - amount) * a + amount * b) / 255;
     }
 };
 
