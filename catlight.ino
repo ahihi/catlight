@@ -10,7 +10,7 @@ int bluePin = 5;
 #include "Color.cpp"
 #include "ColorStepper.cpp"
 
-ColorStepper cs(80000, 200);
+ColorStepper cs(25020, 700, 813, 652);
 
 void setup() {
   pinMode(redPin, OUTPUT);
@@ -25,7 +25,7 @@ void setup() {
 
 void loop() {
   cs.step();
-  Color color = cs.getColor();
+  Color color = cs.value();
   setLedColor(color);
 }
 

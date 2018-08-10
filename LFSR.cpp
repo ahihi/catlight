@@ -14,7 +14,11 @@
 
 class LFSR {
  public:
-  uint32_t lfsr = LFSR_INIT;
+  uint32_t lfsr;
+
+  LFSR(uint32_t seed) {
+    this->lfsr = seed;
+  }
 
   uint32_t next_bit() {
     if(lfsr & 1) { lfsr =  (lfsr >>1) ^ LFSR_MASK ; return 1; }

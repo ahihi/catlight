@@ -21,6 +21,14 @@ class Color {
       );
     }
 
+    Color multiply(Color other) {
+      return Color(
+        static_cast<uint32_t>(this->r) * other.r / 255,
+        static_cast<uint32_t>(this->g) * other.g / 255,
+        static_cast<uint32_t>(this->b) * other.b / 255
+      );
+    }
+
     Color multiply(uint16_t m) {
       uint32_t m32 = static_cast<uint32_t>(m);
       return Color(

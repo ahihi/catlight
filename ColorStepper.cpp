@@ -4,47 +4,45 @@
 #include <stdint.h>
 
 #include "Color.cpp"
-#include "LFSR.cpp"
-
-#define AVG_COUNT 128
+#include "NoiseLerp.cpp"
 
 class ColorStepper {
   public:
-    ColorStepper(long colorDuration, long noiseDuration) {
+    ColorStepper(uint32_t colorDuration, uint32_t flicker1Duration, uint32_t flicker2Duration, uint32_t flicker3Duration) :
+      flicker1(0xfeedfaceUL, flicker1Duration),
+      flicker2(0xf4ccf4ccUL, flicker2Duration),
+      flicker3(0xb00b00b1UL, flicker3Duration)
+    {
+      this->colorIx = 0;
       this->colorCount = sizeof(this->stages) / sizeof(Color);
       this->colorDuration = colorDuration;
       this->colorPeriod = this->colorCount * this->colorDuration;
-      
-      this->noiseDuration = noiseDuration;
-      this->noisePeriod = this->noiseDuration;
     }
 
     void step() {
-      if(this->noiseIx == 0) {
-        this->noise0 = this->noise1;
-        this->noise1 = this->lfsr.next_byte();  
-      }
-
       this->colorIx = (this->colorIx + 1) % this->colorPeriod;
-      this->noiseIx = (this->noiseIx + 1) % this->noisePeriod;
+      this->flicker1.step();
+      this->flicker2.step();
+      this->flicker3.step();
     }
 
-    uint16_t getTime() {
+    uint16_t time() {
       return (this->colorIx % this->colorDuration) * 255 / this->colorDuration;
     }
 
-    Color getColor() {
+    Color value() {
       uint32_t stage0 = this->getStage();
       uint32_t stage1 = (stage0 + 1) % this->colorCount;
-      uint16_t time = this->getTime();
+      uint16_t time = this->time();
 
-      uint32_t noiseBlendAmount = this->noiseIx * 255 / this->noiseDuration;
-      uint32_t noiseBlend = ((255 - noiseBlendAmount) * this->noise0 + noiseBlendAmount * this->noise1) / 255;
-      uint16_t noise = 255 - (255 - noiseBlend) / 6;
+      uint32_t attenuation = 4;
+      uint32_t rNoise = 255 - (255 - this->flicker1.value()) / attenuation;
+      uint32_t gNoise = 255 - (255 - this->flicker2.value()) / attenuation;
+      uint32_t bNoise = 255 - (255 - this->flicker3.value()) / attenuation;
 
       Color color = this->stages[stage0]
         .blend(this->stages[stage1], time)
-        .multiply(noise);
+        .multiply(Color(rNoise, gNoise, bNoise));
 
       #ifdef DEBUG
       Serial.print("stage0 = "); Serial.print(stage0);
@@ -68,17 +66,11 @@ class ColorStepper {
       Color(0, 0, 255),
       Color(255, 0, 255)
     };
-    LFSR lfsr;
-    uint32_t colorIx = 0;
+    NoiseLerp flicker1, flicker2, flicker3;
+    uint32_t colorIx;
     uint32_t colorCount;
     uint32_t colorDuration;
     uint32_t colorPeriod;
-    
-    uint32_t noiseIx = 0;
-    uint32_t noiseDuration;
-    uint32_t noisePeriod;
-    uint32_t noise0 = 0;
-    uint32_t noise1 = 0;
     
     uint16_t getStage() {
       return this->colorIx / this->colorDuration;
